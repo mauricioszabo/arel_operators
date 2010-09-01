@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.platform = Gem::Platform::RUBY
   s.summary = "Operators (|, &, -) for ActiveRecord."
   s.files = FileList["{lib}/**/*"].to_a
-  s.require_path = ""
+  s.require_path = "lib"
   s.test_files = FileList["{spec}/**/*spec.rb"].to_a
   s.has_rdoc = true
   s.extra_rdoc_files = ["README"]
