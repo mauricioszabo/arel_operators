@@ -1,5 +1,5 @@
 require "active_record/operators"
-module AROperators
+module ArelOperators
   def where(args, *opts)
     include_operators_on super
   end
