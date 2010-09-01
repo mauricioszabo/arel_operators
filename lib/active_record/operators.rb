@@ -1,11 +1,11 @@
 module ActiveRecord
   module Operators
     def |(other)
-      build_arel_conditions build_predicate(Arel::Predicates::Or, where_values, other.where_values)
+      build_arel_conditions build_predicate(Arel::Predicates::Or, self, other)
     end
 
     def &(other)
-      build_arel_conditions build_predicate(Arel::Predicates::And, where_values, other.where_values)
+      build_arel_conditions build_predicate(Arel::Predicates::And, self, other)
     end
 
     def -(other)
@@ -13,7 +13,7 @@ module ActiveRecord
     end
 
     def -@
-      build_arel_conditions build_predicate(Arel::Predicates::Not, where_values)
+      build_arel_conditions build_predicate(Arel::Predicates::Not, self)
     end
 
     def where(obj, *args)
@@ -33,9 +33,10 @@ module ActiveRecord
       end
     end
 
-    def build_predicate(predicate, *values)
-      values = values.collect do |v|
-        wrap_predicate_value(v)
+    def build_predicate(predicate, *relations)
+      values = relations.collect do |relation|
+        value = relation.where_values
+        wrap_predicate_value(value)
       end
       predicate.new(*values)
     end

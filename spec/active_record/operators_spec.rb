@@ -1,5 +1,4 @@
 require File.expand_path(File.dirname(__FILE__) + '/../helper')
-require "ruby_debug"
 
 describe ActiveRecord::Operators do
   it 'Should "or" two conditions' do
