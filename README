@@ -1,0 +1,65 @@
+AR Operators
+
+Don't let me wrong, it's not as I hate SQL. I just hate to create complex queries when ActiveRecord
+could do this for me, for free.
+
+Enter AR Operators.
+
+Imagine you're finding people. You want everybody named "John" OR "Smith", BUT don't want anyone who is underaged.
+So, in ActiveRecord, you could do something like:
+
+Person.all :conditions => [
+    '(name LIKE ? OR name LIKE ?) AND age >= 18', '%John%', '%Smith%'
+]
+
+But this is tedious. One of the great advantages of ActiveRecord 3 is use of scopes, so you could:
+
+Person.where(['(name LIKE ? OR name LIKE ?)', '%John%', '%Smith%']).where('age >= 18')
+
+Better. But why not:
+
+johns = Person.where(['name like ?', '%John%'])
+smiths = Person.where(['name like ?', '%Smith%'])
+underageds = Person.where('age < 18')
+(johns | smiths) - underageds
+
+ENTER AR Operators
+
+This library brings operators to ActiveRecord 3. So, all you have to do is:
+require 'ar_operators'
+class Person < ActiveRecord::Base
+  extend AROperators
+end
+
+And you're ready to go. Right now, the following operators are implemented:
+| (OR)
+& (AND)
+- (AND (NOT ...))
+-@ (negates the query. Use like: -Person.where(:name => 'foo'), to find all people where name is not 'foo')
+
+There is also the following constructions:
+p1 = Person.where :name => 'Foo'
+p2 = Person.where :age => 18
+p1.where(p2) #Generates something like: SELECT * FROM people WHERE ((name = 'Foo') AND (id in SELECT id FROM people WHERE age = 18))
+
+Design Decision:
+To not monkey patch ActiveRecord::Relation, I decided to include these operators only when you
+use "where" or "scoped" to find objects. If you decide that ALL ActiveRecord operations should
+have this kind of behaviour, you can:
+
+class ActiveRecord::Relation
+  include ActiveRecord::Operators
+end
+
+Known issues:
+As ActiveRecord::Relation doesn't only include "where" clauses, there can be a strange behaviour if trying
+to combinate more behaviours. For instance, this kind of query:
+p1 = Person.where(:name => 'Foo').limit(10)
+p2 = Person.where(:age => 18).order('name').limit(20)
+(p1 | p2).to_sql
+
+Will generate:
+SELECT "people".* FROM "people"  WHERE ((("people"."name" = 'Foo') OR ("people"."age" = 18))) LIMIT 10
+
+So, if you don't want to fall in undefined behaviours, please use:
+(p1 | p2).limit(20).order('name')
