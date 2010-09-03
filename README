@@ -32,10 +32,12 @@ class Person < ActiveRecord::Base
 end
 
 And you're ready to go. Right now, the following operators are implemented:
-| (OR)
-& (AND)
+.or, |, + (OR)
+.and (AND)
 - (AND (NOT ...))
 -@ (negates the query. Use like: -Person.where(:name => 'foo'), to find all people where name is not 'foo')
+
+I cannot use & (amperstand operator) for AND, because this behaviour is already defined for ActiveRecord::Relation.
 
 There is also the following constructions:
 p1 = Person.where :name => 'Foo'
