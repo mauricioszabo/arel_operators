@@ -19,3 +19,10 @@ class Address < ActiveRecord::Base
   extend ArelOperators
   belongs_to :person
 end
+
+class String
+  def select_clauses
+    scan(/select/i)
+  end
+  alias :select_clause :select_clauses
+end

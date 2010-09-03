@@ -10,7 +10,7 @@ describe ActiveRecord::Operators do
   end
 
   it 'Should "and" two conditions' do
-    arel = Person.where(:id => 190) & Person.where(:id => 210)
+    arel = Person.where(:id => 190).and Person.where(:id => 210)
     result = arel.to_sql
     result.should match(/and/i)
     result.should match(/210/i)
@@ -27,6 +27,7 @@ describe ActiveRecord::Operators do
   it 'should subtract two conditions' do
     arel = Person.where(:id => 190) - Person.where(:id => 210)
     result = arel.to_sql
+    result.should have(1).select_clause
     result.should match(/and.*not/i)
     result.should match(/210/i)
     result.should match(/190/i)
@@ -42,7 +43,15 @@ describe ActiveRecord::Operators do
     result.should include(baz)
     result.should_not include(foo)
     result.should_not include(bar)
-    sql = result.to_sql
-    sql.scan(/select/i).should have(2).matches
+    result.to_sql.should have(2).select_clauses
+  end
+
+  it 'should raise an error if trying to use an operator with different types' do
+    person = Person.where :name => 'Foo'
+    address = Address.where :address => 'Bar'
+    proc { person.and(address) }.should raise_error
+    proc { person.or(address) }.should raise_error
+    proc { person.where(address) }.should raise_error
+    proc { (person-address) }.should raise_error
   end
 end

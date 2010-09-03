@@ -1,15 +1,19 @@
 module ActiveRecord
   module Operators
-    def |(other)
+    def or(other)
+      check_type(other)
       build_arel_predicate(Arel::Predicates::Or, self, other)
     end
+    alias :| :or
+    alias :+ :or
 
-    def &(other)
+    def and(other)
+      check_type(other)
       build_arel_predicate(Arel::Predicates::And, self, other)
     end
 
     def -(other)
-      self & (-other)
+      self.and(-other)
     end
 
     def -@
@@ -18,14 +22,22 @@ module ActiveRecord
 
     def where(obj, *args)
       return super unless obj.respond_to?(:build_where)
+      check_type(obj)
       relation = obj.select(:id)
-      self & clone.tap do |c|
+      other = clone.tap do |c|
         cond = build_where(Arel::Predicates::In.new(relation.primary_key, relation.arel))
         c.where_values = Array.wrap(cond)
       end
+      self.and(other)
     end
 
     private
+    def check_type(other)
+      if table != other.table
+        raise RelationMismatch.new(self.class)
+      end
+    end
+
     def build_arel_predicate(predicate, *args)
       clone.tap do |c|
         condition = build_predicate(predicate, *args)
@@ -52,6 +64,12 @@ module ActiveRecord
           v
         end
       end
+    end
+  end
+
+  class RelationMismatch < StandardError
+    def initialize(expected_class)
+      super("Invalid class for operation. Expected #{expected_class}")
     end
   end
 end
