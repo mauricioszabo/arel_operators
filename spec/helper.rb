@@ -7,7 +7,7 @@ ActiveRecord::Base.establish_connection(
   'database' => ':memory:'
 )
 
-ActiveRecord::Base.connection.execute("CREATE TABLE people(id integer primary key, name varchar(255))")
+ActiveRecord::Base.connection.execute("CREATE TABLE people(id integer primary key, name varchar(255), age INTEGER)")
 ActiveRecord::Base.connection.execute("CREATE TABLE addresses(id integer primary key, address varchar(255), person_id integer)")
 
 class Person < ActiveRecord::Base

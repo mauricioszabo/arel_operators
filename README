@@ -65,3 +65,10 @@ SELECT "people".* FROM "people"  WHERE ((("people"."name" = 'Foo') OR ("people".
 
 So, if you don't want to fall in undefined behaviours, please use:
 (p1 | p2).limit(20).order('name')
+
+Furthermore, beware of "OR" operator. Don't try this at home:
+p1 = Person.where(:name => "Foo")
+a1 = Address.where(:road => "Something")
+(p1 | a1) #This will generate something like: 
+SELECT     "people".* FROM       "people"  WHERE     ((("people"."name" = 'Foo') OR ("addresses"."road" = 'Something')))
+So, as with & operator, you must join relations so your query would be correct.

@@ -1,4 +1,4 @@
-module ActiveRecord
+module ArelOperators
   module Operators
     def or(other)
       check_type(other)
@@ -45,6 +45,8 @@ module ActiveRecord
         c.where_values = Array.wrap(cond)
         possible_joins = args.select { |x| x.object_id != object_id && x.respond_to?(:joins_values) }
         c.joins_values += possible_joins.collect { |x| x.joins_values }
+        #possible_eager = args.select { |x| x.object_id != object_id }
+        #c.eager_load_values += possible_eager.collect { |x| x.eager_load_values }.flatten
       end
     end
 
@@ -58,11 +60,8 @@ module ActiveRecord
 
     def wrap_predicate_value(value)
       value.collect do |v|
-        if v.is_a?(String)
-          Arel::SqlLiteral.new(v)
-        else
-          v
-        end
+        next v unless v.is_a?(String)
+        Arel::SqlLiteral.new(v)
       end
     end
   end
