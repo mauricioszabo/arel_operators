@@ -45,14 +45,4 @@ describe ArelOperators::Operators do
     result.should_not include(bar)
     result.to_sql.should have(2).select_clauses
   end
-
-  it 'should raise an error if trying to use an operator with different types' do
-    pending
-    person = Person.where :name => 'Foo'
-    address = Address.where :address => 'Bar'
-    proc { person.and(address) }.should raise_error
-    proc { person.or(address) }.should raise_error
-    proc { person.where(address) }.should raise_error
-    proc { (person-address) }.should raise_error
-  end
 end

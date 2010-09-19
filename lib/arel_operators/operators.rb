@@ -1,14 +1,12 @@
 module ArelOperators
   module Operators
     def or(other)
-      check_type(other)
       build_arel_predicate(Arel::Predicates::Or, self, other)
     end
     alias :| :or
     alias :+ :or
 
     def and(other)
-      check_type(other)
       build_arel_predicate(Arel::Predicates::And, self, other)
     end
 
@@ -22,7 +20,6 @@ module ArelOperators
 
     def where(obj, *args)
       return super unless obj.respond_to?(:build_where)
-      check_type(obj)
       relation = obj.select(:id)
       other = clone.tap do |c|
         cond = build_where(Arel::Predicates::In.new(relation.primary_key, relation.arel))
@@ -32,12 +29,6 @@ module ArelOperators
     end
 
     private
-    def check_type(other)
-      if table != other.table
-        raise RelationMismatch.new(self.class)
-      end
-    end
-
     def build_arel_predicate(predicate, *args)
       clone.tap do |c|
         condition = build_predicate(predicate, *args)
