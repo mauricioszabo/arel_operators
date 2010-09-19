@@ -79,5 +79,9 @@ describe ArelOperators::Finder do
       result = Person.where(:age => 17) { name == 'Foo' }
       result.should == [@p1]
     end
+
+    it 'should be able to find on a HAVING condition' do
+      pending
+    end
   end
 end

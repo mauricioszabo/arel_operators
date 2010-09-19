@@ -1,12 +1,10 @@
-AR Operators
+= AR Operators =
 
 Don't let me wrong, it's not as I hate SQL. I just hate to create complex queries when ActiveRecord
 could do this for me, for free.
 
-Enter AR Operators.
-
-Imagine you're finding people. You want everybody named "John" OR "Smith", BUT don't want anyone who is underaged.
-So, in ActiveRecord, you could do something like:
+For example, imagine you're finding people. You want everybody named "John" OR "Smith", 
+BUT don't want anyone who is underaged. So, in ActiveRecord, you could do something like:
 
 Person.all :conditions => [
     '(name LIKE ? OR name LIKE ?) AND age >= 18', '%John%', '%Smith%'
@@ -20,15 +18,15 @@ Better. But why not:
 
 johns = Person.where(['name like ?', '%John%'])
 smiths = Person.where(['name like ?', '%Smith%'])
-underageds = Person.where('age < 18')
-(johns | smiths) - underageds
+underaged = Person.where('age < 18')
+(johns | smiths) - underaged
 
-ENTER AR Operators
+== ENTER AR Operators ==
 
 This library brings operators to ActiveRecord 3. So, all you have to do is:
 require 'ar_operators'
 class Person < ActiveRecord::Base
-  extend AROperators
+  extend ArelOperators
 end
 
 And you're ready to go. Right now, the following operators are implemented:
@@ -44,16 +42,58 @@ p1 = Person.where :name => 'Foo'
 p2 = Person.where :age => 18
 p1.where(p2) #Generates something like: SELECT * FROM people WHERE ((name = 'Foo') AND (id in SELECT id FROM people WHERE age = 18))
 
-Design Decision:
+== Design Decision: ==
 To not monkey patch ActiveRecord::Relation, I decided to include these operators only when you
 use "where" or "scoped" to find objects. If you decide that ALL ActiveRecord operations should
 have this kind of behaviour, you can:
 
 class ActiveRecord::Relation
-  include ActiveRecord::Operators
+  include ArelOperators::Operators
 end
 
-Known issues:
+== Finders ==
+Ok, so we don't have to write tedious SQL operations by hand. What about trying a little further,
+and not write ANY SQL at all? After all, we have blocks in Ruby, so what about:
+
+Person.where { |p| p.name >= 10 }
+
+ArelOperators, right now, permits this kind of behaviour only for where clauses (no "having" support
+right now). The following operations are supported:
+== (Test for equality)
+!= (Test for inequality, Ruby 1.9 only)
+>, >= (Test for Greater or Greather or Equal)
+<, <= (Test for Lower, or Lower or equal)
+in? (SQL IN clause, "WHERE name IN(1, 2, 3)" )
+like?, matches?, =~ (SQL LIKE clause, "WHERE name LIKE 'something'")
+
+So, as an example:
+
+Person.where { |p| p.name.like?("F%") }
+Person.where { |p| p.name =~ "F%" } #Same as above
+Person.where { |p| p.age.in?([10, 20, 30]) } #SQL IN operator
+Person.where { |p| p.age.in?(0..17) } #SQL BETWEEN operator
+
+Furthermore, you can OR or AND your clauses with | and &. Ruby 1.9 "!" and  is also supported, and for
+Ruby 1.8, you can use the negative ("-@") operator. For example:
+
+Person.where { |p| (p.name != "Fred") | (p.age > 17) } #Ruby 1.9 version
+Person.where { |p| !(p.name == "Fred") | (p.age > 17) } #Another Ruby 1.9 version
+Person.where { |p| -(p.name == "Fred") | (p.age > 17) } #All ruby versions
+
+The block argument is optional, too, so:
+
+Person.where { name == "Foo" }
+Person.where { name.like "F%" }
+Person.where { (age <= 10) & (name =~ "F%) }
+
+Please notice, that as & and | operators have a high precedence, don't forget the parenthesis,
+otherwise undesired behaviours can occur.
+
+== NOTICE ==
+Regexp operations are NOT supported. Right now, I'm only delegating these operators
+to Arel, and Arel still has no support for regexp.
+
+== Known issues: ==
 As ActiveRecord::Relation doesn't only include "where" clauses, there can be a strange behaviour if trying
 to combinate more behaviours. For instance, this kind of query:
 p1 = Person.where(:name => 'Foo').limit(10)

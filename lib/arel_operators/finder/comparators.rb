@@ -6,38 +6,27 @@ module ArelOperators
         @field = finder.table[field]
       end
 
-      def ==(other)
-        create_finder @field.eq(other)
+      def self.convert_to_arel(operation, arel_method)
+        define_method(operation) do |other|
+          arel_clause =  @field.send(arel_method, other)
+          ArelOperators::Finder.new(@finder.table, arel_clause)
+        end
       end
 
-      if RUBY_VERSION >= '1.9.0'
-        eval '
-          def !=(other)
-            create_finder @field.not_eq(other)
-          end
-        '
+      def nil?
+        self == nil
       end
 
-      def >(other)
-        create_finder @field.gt(other)
-      end
-
-      def >=(other)
-        create_finder @field.gteq(other)
-      end
-
-      def <(other)
-        create_finder @field.lt(other)
-      end
-
-      def <=(other)
-        create_finder @field.lteq(other)
-      end
-
-      private
-      def create_finder(arel)
-        ArelOperators::Finder.new(@finder.table, arel)
-      end
+      convert_to_arel :==, :eq
+      convert_to_arel '!=', :not_eq
+      convert_to_arel :>, :gt
+      convert_to_arel :>=, :gteq
+      convert_to_arel :<, :lt
+      convert_to_arel :<=, :lteq
+      convert_to_arel :in?, :in
+      convert_to_arel :like?, :matches
+      alias :matches? :like?
+      alias :=~ :like? #TODO: Is this really a good idea?
     end
   end
 end

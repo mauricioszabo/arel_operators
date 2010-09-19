@@ -19,6 +19,11 @@ describe ArelOperators::Finder::Comparators do
       @table[:name].not_eq('foo')
   end
 
+  it 'should be able to verify if an attribute is nil' do
+    (@comparator.nil?).arel.should ==
+      @table[:name].eq(nil)
+  end
+
   it 'should be able to find by greater than' do
     (@comparator > 'foo').arel.should == @table[:name].gt('foo')
     (@comparator >= 'foo').arel.should == @table[:name].gteq('foo')
@@ -29,7 +34,15 @@ describe ArelOperators::Finder::Comparators do
     (@comparator <= 'foo').arel.should == @table[:name].lteq('foo')
   end
 
-  #it 'should be able to find IN'
-  #it 'should be able to find with LIKE'
+  it 'should be able to find IN' do
+    @comparator.in?(['foo']).arel.should == @table[:name].in(['foo'])
+  end
+
+  it 'should be able to find with LIKE' do
+    @comparator.like?('foo').arel.should == @table[:name].matches('foo')
+    @comparator.matches?('foo').arel.should == @table[:name].matches('foo')
+    (@comparator =~ 'foo').arel.should == @table[:name].matches('foo')
+  end
+
   #it 'should be able to find with Regex'
 end
