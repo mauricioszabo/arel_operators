@@ -1,7 +1,12 @@
 module ArelOperators
   module Operators
     def or(other)
-      build_arel_predicate(Arel::Predicates::Or, self, other)
+      #TODO: Refactor
+      v1 = where_values
+      v1 = v1[1..-1].inject(v1[0]) { |r, e| Arel::Predicates::And.new(r, e) }
+      v2 = other.where_values
+      v2 = v2[1..-1].inject(v2[0]) { |r, e| Arel::Predicates::And.new(r, e) }
+      build_arel_predicate(Arel::Predicates::Or, v1, v2)
     end
     alias :| :or
     alias :+ :or
@@ -15,7 +20,10 @@ module ArelOperators
     end
 
     def -@
-      build_arel_predicate(Arel::Predicates::Not, self)
+      #TODO: Refactor
+      value = where_values
+      value = value[1..-1].inject(value[0]) { |r, e| Arel::Predicates::Or.new(r, e) }
+      build_arel_predicate(Arel::Predicates::Not, value)
     end
 
     def where(obj, *args)
@@ -35,7 +43,7 @@ module ArelOperators
         cond = build_where(condition)
         c.where_values = Array.wrap(cond)
         possible_joins = args.select { |x| x.object_id != object_id && x.respond_to?(:joins_values) }
-        c.joins_values += possible_joins.collect { |x| x.joins_values }
+        c.joins_values += possible_joins.collect { |x| x.joins_values }.flatten
         #possible_eager = args.select { |x| x.object_id != object_id }
         #c.eager_load_values += possible_eager.collect { |x| x.eager_load_values }.flatten
       end
@@ -44,7 +52,7 @@ module ArelOperators
     def build_predicate(predicate, *relations)
       values = relations.collect do |relation|
         value = relation.is_a?(ActiveRecord::Relation) ? relation.where_values : relation
-        wrap_predicate_value(value)
+        wrap_predicate_value([value])
       end
       predicate.new(*values)
     end

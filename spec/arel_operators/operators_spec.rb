@@ -1,12 +1,25 @@
 require File.expand_path(File.dirname(__FILE__) + '/../helper')
 
 describe ArelOperators::Operators do
+  before do
+    Person.delete_all
+  end
+
   it 'Should "or" two conditions' do
     arel = Person.where(:id => 190) | Person.where(:id => 210)
     result = arel.to_sql
     result.should match(/or/i)
     result.should match(/210/i)
     result.should match(/190/i)
+  end
+
+  it 'Should "or" two conditions, even when there are multiple "where" clauses' do
+    p1 = Person.create! :name => 'One'
+    p2 = Person.create! :name => 'Two'
+    p3 = Person.create! :name => 'Three'
+    result = (Person.where(:name => 'One').where(:name => 'Two'))
+    result = Person.where(:name => 'Three') | result
+    result.should == [p3]
   end
 
   it 'Should "and" two conditions' do
@@ -22,6 +35,14 @@ describe ArelOperators::Operators do
     result = arel.to_sql
     result.should match(/not/i)
     result.should match(/190/i)
+  end
+
+  it 'should negate even when we have lots of conditions' do
+    p1 = Person.create! :name => 'One'
+    p2 = Person.create! :name => 'Two'
+    p3 = Person.create! :name => 'Three'
+    result = -(Person.where(:name => 'One').where(:name => 'Two'))
+    result.should == [p3]
   end
 
   it 'should subtract two conditions' do
