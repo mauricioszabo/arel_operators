@@ -1,12 +1,7 @@
 module ArelOperators
   module Operators
     def or(other)
-      #TODO: Refactor
-      v1 = where_values
-      v1 = v1[1..-1].inject(v1[0]) { |r, e| Arel::Predicates::And.new(r, e) }
-      v2 = other.where_values
-      v2 = v2[1..-1].inject(v2[0]) { |r, e| Arel::Predicates::And.new(r, e) }
-      build_arel_predicate(Arel::Predicates::Or, v1, v2)
+      build_arel_predicate(Arel::Predicates::Or, self, other)
     end
     alias :| :or
     alias :+ :or
@@ -20,10 +15,7 @@ module ArelOperators
     end
 
     def -@
-      #TODO: Refactor
-      value = where_values
-      value = value[1..-1].inject(value[0]) { |r, e| Arel::Predicates::Or.new(r, e) }
-      build_arel_predicate(Arel::Predicates::Not, value)
+      build_arel_predicate(Arel::Predicates::Not, self)
     end
 
     def where(obj, *args)
@@ -52,6 +44,7 @@ module ArelOperators
     def build_predicate(predicate, *relations)
       values = relations.collect do |relation|
         value = relation.is_a?(ActiveRecord::Relation) ? relation.where_values : relation
+        value = value[1..-1].inject(value[0]) { |r, e| Arel::Predicates::And.new(r, e) }
         wrap_predicate_value([value])
       end
       predicate.new(*values)

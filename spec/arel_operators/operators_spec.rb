@@ -38,11 +38,11 @@ describe ArelOperators::Operators do
   end
 
   it 'should negate even when we have lots of conditions' do
-    p1 = Person.create! :name => 'One'
-    p2 = Person.create! :name => 'Two'
-    p3 = Person.create! :name => 'Three'
-    result = -(Person.where(:name => 'One').where(:name => 'Two'))
-    result.should == [p3]
+    p1 = Person.create! :name => 'One', :age => 10
+    p2 = Person.create! :name => 'Two', :age => 10
+    #p3 = Person.create! :name => 'Three'
+    result = -(Person.where(:age => 10).where(:name => 'One'))
+    result.should == [p2]
   end
 
   it 'should subtract two conditions' do
