@@ -26,3 +26,18 @@ class String
   end
   alias :select_clause :select_clauses
 end
+
+RSpec::Matchers.define :be_equivalent_to do |arel|
+  match do |match|
+    arel.to_sql == match.to_sql
+  end
+
+  failure_message_for_should do |match|
+    "The two AREL objects are not equivalent.
+    First is:
+      #{match.to_sql}
+    Second is:
+      #{arel.to_sql}
+    "
+  end
+end
