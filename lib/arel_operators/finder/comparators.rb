@@ -3,7 +3,7 @@ module ArelOperators
     class Comparators
       def initialize(finder, field)
         @finder = finder
-        @field = finder.table[field]
+        @field = field
       end
 
       def self.convert_to_arel(operation, arel_method)
