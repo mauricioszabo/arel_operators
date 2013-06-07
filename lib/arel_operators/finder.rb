@@ -6,12 +6,12 @@ module ArelOperators
     def initialize(arel_table, operation=nil)
       @table = arel_table
       @arel = operation
-      @table.attributes.each { |a| define_attribute_method a.name }
+      @table.columns.each { |a| define_attribute_method a }
     end
 
-    def define_attribute_method(attribute)
-      singleton_class.send :define_method, attribute do
-        ArelOperators::Finder::Comparators.new(self, @table[attribute])
+    def define_attribute_method(arel_attribute)
+      singleton_class.send :define_method, arel_attribute.name do
+        ArelOperators::Finder::Comparators.new(self, arel_attribute)
       end
     end
     private :define_attribute_method
@@ -35,7 +35,7 @@ module ArelOperators
     end
 
     def -@
-      Finder.new(table, Arel::Predicates::Not.new(arel))
+      Finder.new(table, Arel::Nodes::Not.new(arel))
     end
 
     undef_method :==

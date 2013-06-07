@@ -1,15 +1,9 @@
-require "spec/helper"
+require_relative "../helper"
 
 describe ArelOperators::Finder do
   before do
     @table = Person.arel_table
     @finder = ArelOperators::Finder.new Person.arel_table
-  end
-
-  it 'should be able to convert to a arel' do
-    arel = mock("Arel")
-    @finder = ArelOperators::Finder.new Person.arel_table, arel
-    @finder.arel.should == arel
   end
 
   it 'should return a empty arel if not being able to convert' do
@@ -29,32 +23,28 @@ describe ArelOperators::Finder do
   it 'should be able to "or" two conditions' do
     c1 = @table[:id].eq(1)
     c2 = @table[:name].eq(2)
-    ((@finder.id == 1) | (@finder.name == 2)).arel.should == 
-      c1.or(c2)
+    ((@finder.id == 1) | (@finder.name == 2)).arel.should be_equivalent_to(c1.or(c2))
   end
 
   it 'should be able to "and" two conditions' do
     c1 = @table[:id].eq(1)
     c2 = @table[:name].eq(2)
-    ((@finder.id == 1) & (@finder.name == 2)).arel.should == 
-      c1.and(c2)
+    ((@finder.id == 1) & (@finder.name == 2)).arel.should be_equivalent_to c1.and(c2)
   end
 
   it 'should be able to negate the find (in Ruby1.9)' do
     next if RUBY_VERSION < '1.9.0'
     @finder = ArelOperators::Finder.new Person.arel_table, @table[:name].eq('foo')
-    (!@finder).arel.should ==
-      Arel::Predicates::Not.new(@table[:name].eq('foo'))
+    (!@finder).arel.should be_equivalent_to Arel::Nodes::Not.new(@table[:name].eq('foo'))
   end
 
   it 'should be able to negate the find with -@' do
     @finder = ArelOperators::Finder.new Person.arel_table, @table[:name].eq('foo')
-    (-@finder).arel.should ==
-      Arel::Predicates::Not.new(@table[:name].eq('foo'))
+    (-@finder).arel.should be_equivalent_to Arel::Nodes::Not.new(@table[:name].eq('foo'))
   end
 
   #it 'should be able to find in a subselect'
-  
+
   context 'when finding using WHERE and a block' do
     before do
       @p1 = Person.create! :name => 'Foo', :age => 17
